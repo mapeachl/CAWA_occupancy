@@ -13,6 +13,9 @@ y <- data.frame(cawax$cawa80,cawax$cawa00)
 # Covariates
 # Effort in both time periods
 effort <- data.frame(cawax$Effort80,cawax$Effort00)
+# Replace NA with averages for each atlas period
+effort[,1][which(is.na(effort[,1]))] = mean(effort[,1],na.rm=T)
+effort[,2][which(is.na(effort[,2]))] = mean(effort[,2],na.rm=T)
 
 # Detection in the earlier atlas
 detect80 <- data.frame(cawax$Occ80,cawax$Occ80)
@@ -59,8 +62,7 @@ cat("
     }
     
     # Detection model
-    for(k in 1:16){
-    BetaD[k] ~ dunif(-20,20)
+    gamma~dunif(-20,20)
     }
     
     # Ecological submodel: Define state conditional on parameters
@@ -87,11 +89,7 @@ cat("
     y[i,j] ~ dbern(muy[i,j])
     muy[i,j] <- z[i,j]*pstar[i,j]
     pstar[i,j] <- 1-(1-logitp[i,j])^effort[i,j]
-    logitp[i,j] <- 1/(1+exp(-a[i,j]))
-    a[i,j] <- BetaD[1] + BetaD[2]*pfor[i] + BetaD[3]*detect80[i,j] + BetaD[4]*detect3[i,j] + 
-              BetaD[5]*y1980[i] + BetaD[6]*y1981[i] + BetaD[7]*y1982[i] + BetaD[8]*y1983[i] +
-              BetaD[9]*y1984[i] + BetaD[10]*y1985[i] + BetaD[11]*y2000[i] + BetaD[12]*y2001[i] +
-              BetaD[13]*y2002[i] + BetaD[14]*y2003[i] + BetaD[15]*y2004[i] + BetaD[16]*y2005[i]
+    logitp[i,j] <- 1/(1+exp(-gamma))
     
     } #j
     } #i
@@ -122,20 +120,16 @@ sink()
 # Bundle data
 win.data <- list(y = y, nsite = dim(y)[1], nyear = dim(y)[2], 
                  effort=effort,ele=cawax$ele,ele2=cawax$ele2,pfor=cawax$pfor,
-                 acov=cawax$acov,neigh=cawax$neigh,edge_resid=cawax$edge_resid,
-                 detect80=detect80,detect3=detect3,y1980=cawax$y1980,y1981=cawax$y1981,
-                 y1982=cawax$y1982,y1983=cawax$y1983,y1984=cawax$y1984,y1985=cawax$y1985,
-                 y2000=cawax$y2000,y2001=cawax$y2001,y2002=cawax$y2002,y2003=cawax$y2003,
-                 y2004=cawax$y2004,y2005=cawax$y2005)
+                 acov=cawax$acov,neigh=cawax$neigh,edge_resid=cawax$edge_resid)
 
 # Initial values
 #zst <- apply(y, c(1, 3), max)       # Observed occurrence as inits for z
 
 inits <- function(){list(z = matrix(1,dim(y)[1],dim(y)[2]),BetaO=rnorm(5,0,0.001),
-                         BetaC=rnorm(2,0,0.001),BetaE=rnorm(3,0,0.001),BetaD=rnorm(16,0,0.001))}
+                         BetaC=rnorm(2,0,0.001),BetaE=rnorm(3,0,0.001),gamma=runif(1,-10,10))}
 
 # Parameters monitored
-params <- c("BetaO","BetaC","BetaE","BetaD")
+params <- c("BetaO","BetaC","BetaE","gamma")
 
 # MCMC settings
 ni <- 5000
