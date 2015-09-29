@@ -8,21 +8,21 @@ load("CAwA_sadoti.saved")
 # Create dataframe for analysis
 # Occupancy data
 
-y <- data.frame(cawax$cawa80,cawax$cawa00)
+y <- as.matrix(cbind(cawax$cawa80,cawax$cawa00))
 
 # Covariates
 # Effort in both time periods
-effort <- data.frame(cawax$Effort80,cawax$Effort00)
+effort <- as.matrix(cbind(cawax$Effort80,cawax$Effort00))
 # Replace NA with averages for each atlas period
 effort[,1][which(is.na(effort[,1]))] = mean(effort[,1],na.rm=T)
 effort[,2][which(is.na(effort[,2]))] = mean(effort[,2],na.rm=T)
 
 # Detection in the earlier atlas
-detect80 <- data.frame(cawax$Occ80,cawax$Occ80)
+detect80 <- as.matrix(cbind(cawax$Occ80,cawax$Occ80))
 detect80[,1] = 0
 
 # Earlier detection in neighboring blocks during the same atlas
-detect3 <- data.frame(cawax$Priors80,cawax$Priors00)
+detect3 <- as.matrix(cbind(cawax$Priors80,cawax$Priors00))
 
 # Create year variables
 years <- c(1980:1985)
@@ -37,7 +37,7 @@ for (i in 1:length(years)){
 names(cawax[(dim(cawax)[2]-11):dim(cawax)[2]]) = c("y1980","y1981","y1982","y1983","y1984","y1985","y2000","y2001","y2002","y2003","y2004","y2005")
 
 # Load library
-library(rjags)
+library(R2WinBUGS)
 
 # Specify model in BUGS language
 sink("CAWAocc.txt")
@@ -125,8 +125,9 @@ win.data <- list(y = y, nsite = dim(y)[1], nyear = dim(y)[2],
 # Initial values
 #zst <- apply(y, c(1, 3), max)       # Observed occurrence as inits for z
 
-inits <- function(){list(z = matrix(1,dim(y)[1],dim(y)[2]),BetaO=rnorm(5,0,0.001),
-                         BetaC=rnorm(2,0,0.001),BetaE=rnorm(3,0,0.001),gamma=runif(1,-10,10))}
+inits <- function()
+          list(z = matrix(1,dim(y)[1],dim(y)[2]),BetaO=rnorm(5,0,0.001),
+                BetaC=rnorm(2,0,0.001),BetaE=rnorm(3,0,0.001),gamma=runif(1,-10,10))
 
 # Parameters monitored
 params <- c("BetaO","BetaC","BetaE","gamma")
@@ -137,5 +138,6 @@ nt <- 4
 nb <- 500
 nc <- 3
 
-test1.glmm <- jags.model("CAWAocc.txt", win.data, inits, n.chain=nc, n.adapt=100)
+out1 <- bugs(data=win.data, inits=inits, parameters.to.save=params, model.file="CAWAocc.txt",
+        n.thin=nt,n.chains=nc,n.burnin=nb,n.iter=ni,debug=TRUE,DIC=TRUE,working.directory=getwd())
 
