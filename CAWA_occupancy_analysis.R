@@ -47,18 +47,6 @@ neigh <- cawax$neigh
 edge_resid <- cawax$edge_resid
 edge_resid <- (edge_resid-mean(edge_resid))/sd(edge_resid)
 
-# Create year variables
-years <- c(1980:1985)
-for (i in 1:length(years)){
-  cawax[,dim(cawax)[2]+1] <- ifelse(cawax$X90year80==i,1,0)
-}
-years <- c(2000:2005)
-for (i in 1:length(years)){
-  cawax[,dim(cawax)[2]+1] <- ifelse(cawax$X90year00==i,1,0)
-}
-
-names(cawax[(dim(cawax)[2]-11):dim(cawax)[2]]) = c("y1980","y1981","y1982","y1983","y1984","y1985","y2000","y2001","y2002","y2003","y2004","y2005")
-
 # Load library
 library(R2WinBUGS)
 
@@ -85,7 +73,7 @@ cat("
     }
     
     # Detection model
-    gamma~dunif(-20,20)
+    gamma~dunif(-20,0)
     
     # Ecological submodel: Define state conditional on parameters
     for (i in 1:nsite){
@@ -143,4 +131,6 @@ nc <- 3
 
 out1 <- bugs(data=win.data, inits=inits, parameters.to.save=params, model.file="CAWAocc.txt",
         n.thin=nt,n.chains=nc,n.burnin=nb,n.iter=ni,debug=TRUE,DIC=TRUE,working.directory=getwd())
+        
+# out <- jags.model("CAWAocc.txt",win.data,inits,n.chain=nc,n.adapt=100)
 
