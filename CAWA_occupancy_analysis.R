@@ -42,7 +42,6 @@ acov <- cawax$acov
 
 # Neigh
 neigh <- cawax$neigh
-neigh <- (neigh-mean(neigh))/sd(neigh)
 
 # Edge residuals
 edge_resid <- cawax$edge_resid
@@ -87,7 +86,6 @@ cat("
     
     # Detection model
     gamma~dunif(-20,20)
-    }
     
     # Ecological submodel: Define state conditional on parameters
     for (i in 1:nsite){
@@ -117,25 +115,6 @@ cat("
     
     } #j
     } #i
-    
-    # Derived parameters: Sample and population occupancy, growth rate and turnover
-    #don't run this for now just makes everything take longer 
-    #meanpsi[1] <- mean(psi1[])
-    #meanpsi[2] <- mean(psi2[])
-    #n.occ[1]<-sum(z[1:nsite,1])
-    #pocc[1] <- n.occ[1]/nsite
-    #n.occ[2]<-sum(z[1:nsite,2])
-    #pocc[2] <- n.occ[2]/nsite
-    
-    #for(i in 1:nsite){
-    #colyn[i] <- step(z[i,2]-z[i,1]-1)
-    #extyn[i] <- step(z[i,1]-z[i,2]-1)
-    #}
-    #scol <- sum(colyn[])
-    #sext <- sum(extyn[])
-    # Step function and equals funcion are work arounds for if/then  
-    # # growthr <- psi1/psi2
-    # # turnover <- (1 - psi1) * col/psi2
     
     }
     ",fill = TRUE)
