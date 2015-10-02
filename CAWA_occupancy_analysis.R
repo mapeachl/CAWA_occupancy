@@ -63,7 +63,6 @@ cat("
     
     # Detection model
     gamma~dunif(-20,20)
-    }
     
     # Ecological submodel: Define state conditional on parameters
     for (i in 1:nsite){
