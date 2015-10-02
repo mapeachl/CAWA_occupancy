@@ -10,12 +10,15 @@ load("CAwA_sadoti.saved")
 
 y <- as.matrix(cbind(cawax$cawa80,cawax$cawa00))
 
-# Covariates
+# Covariates -- create and standardize as necessary
 # Effort in both time periods
 effort <- as.matrix(cbind(cawax$Effort80,cawax$Effort00))
 # Replace NA with averages for each atlas period
 effort[,1][which(is.na(effort[,1]))] = mean(effort[,1],na.rm=T)
 effort[,2][which(is.na(effort[,2]))] = mean(effort[,2],na.rm=T)
+
+effort[,1] <- (effort[,1]-mean(effort[,1])/sd(effort[,1])
+effort[,2] <- (effort[,2]-mean(effort[,2])/sd(effort[,2])
 
 # Detection in the earlier atlas
 detect80 <- as.matrix(cbind(cawax$Occ80,cawax$Occ80))
@@ -23,6 +26,27 @@ detect80[,1] = 0
 
 # Earlier detection in neighboring blocks during the same atlas
 detect3 <- as.matrix(cbind(cawax$Priors80,cawax$Priors00))
+
+# Elevation
+ele <- cawax$ele
+ele <- (ele-mean(ele))/sd(ele)
+
+ele2 <- cawax$ele2
+ele2 <- (ele2-mean(ele2))/sd(ele2)
+
+# Forest cover
+pfor <- cawax$pfor
+
+# Spatial auto covariate
+acov <- cawax$acov
+
+# Neigh
+neigh <- cawax$neigh
+neigh <- (neigh-mean(neigh))/sd(neigh)
+
+# Edge residuals
+edge_resid <- cawax$edge_resid
+edge_resid <- (edge_resid-mean(edge_resid))/sd(edge_resid)
 
 # Create year variables
 years <- c(1980:1985)
@@ -119,15 +143,15 @@ sink()
 
 # Bundle data
 win.data <- list(y = y, nsite = dim(y)[1], nyear = dim(y)[2], 
-                 effort=effort,ele=cawax$ele,ele2=cawax$ele2,pfor=cawax$pfor,
-                 acov=cawax$acov,neigh=cawax$neigh,edge_resid=cawax$edge_resid)
+                 effort=effort,ele=ele,ele2=ele2,pfor=pfor,
+                 acov=acov,neigh=neigh,edge_resid=edge_resid)
 
 # Initial values
 #zst <- apply(y, c(1, 3), max)       # Observed occurrence as inits for z
 
 inits <- function()
           list(z = matrix(1,dim(y)[1],dim(y)[2]),BetaO=rnorm(5,0,0.001),
-                BetaC=rnorm(2,0,0.001),BetaE=rnorm(3,0,0.001),gamma=runif(1,-10,10))
+                BetaC=rnorm(2,0,0.001),BetaE=rnorm(3,0,0.001),gamma=runif(1,-10,-3))
 
 # Parameters monitored
 params <- c("BetaO","BetaC","BetaE","gamma")
